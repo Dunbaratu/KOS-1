@@ -28,7 +28,7 @@ TARGET:
 | **Gettable**: yes
 | **Settable**: yes
 | **Type**: `Vessel <structures/vessels/vessel.html>`__ or `Body <structures/celestial_bodies/body.html>`__ 
-| **Description**: Whichever `Orbitable <structures/orbits/orbitable.html>`__ object happens to be the one selected as the current KSP target. If set to a string, it will assume the string is the name of a vessel being targetted and set it to a vessel by that name. For best results set it to Body("some name") or Vessel("some name") explicitly.
+| **Description**: Whichever `Orbitable <structures/orbits/orbitable.html>`__ object happens to be the one selected as the current KSP target. If set to a string, it will assume the string is the name of a vessel being targeted and set it to a vessel by that name. For best results set it to Body("some name") or Vessel("some name") explicitly.
 
 Alias shortcuts for SHIP fields
 -------------------------------
@@ -113,7 +113,7 @@ which triggers the next stage.
 NextNode
 --------
 
-Get-only. ``nextnode`` returns the next planned manuever :struct:`node` in the SHIP's flight plan.  Bombs out if no such node exists.
+Get-only. ``nextnode`` returns the next planned maneuver :struct:`node` in the SHIP's flight plan.  Bombs out if no such node exists.
 
 Resource Types
 --------------
@@ -323,6 +323,14 @@ on-rails into full physics.
 TIME is the time since the entire saved game campaign started, in the
 kerbal universe's time. i.e. TIME = 0 means a brand new campaign was
 just started.
+
+KUNIVERSE
+~~~~~~~~~
+
+:ref:`Kuniverse <kuniverse>` is a structure that contains many settings that
+break the fourth wall a little bit and control the game simulation directly.
+The eventual goal is probably to move many of the variables you see listed
+below into ``kuniverse``.
 
 Config
 ~~~~~~
