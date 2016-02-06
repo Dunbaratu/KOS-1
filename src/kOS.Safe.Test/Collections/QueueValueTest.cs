@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using kOS.Safe.Encapsulation;
 using kOS.Safe.Encapsulation.Suffixes;
 using NUnit.Framework;
+using kOS.Safe.Serialization;
 
 namespace kOS.Safe.Test.Collections
 {
@@ -107,6 +108,8 @@ namespace kOS.Safe.Test.Collections
             Assert.IsTrue((BooleanValue)InvokeDelegate(queue, "CONTAINS", firstObject));
             Assert.IsFalse((BooleanValue)InvokeDelegate(queue, "CONTAINS", secondObject));
             Assert.IsFalse((BooleanValue)InvokeDelegate(queue, "CONTAINS", thirdObject));
+
         }
+
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using kOS.Safe.Encapsulation;
 using kOS.Safe.Encapsulation.Suffixes;
 using NUnit.Framework;
+using kOS.Safe.Serialization;
 
 namespace kOS.Safe.Test.Collections
 {
@@ -93,22 +94,22 @@ namespace kOS.Safe.Test.Collections
         [Test]
         public void CanTestContains()
         {
-            var stack = new StackValue();
+            var stack = new StackValue ();
 
-            var zedObject = new StringValue("abc");
-            InvokeDelegate(stack, "PUSH", zedObject);
+            var zedObject = new StringValue ("abc");
+            InvokeDelegate (stack, "PUSH", zedObject);
             var firstObject = ScalarIntValue.One;
-            InvokeDelegate(stack, "PUSH", firstObject);
+            InvokeDelegate (stack, "PUSH", firstObject);
             var secondObject = ScalarIntValue.Two;
-            var thirdObject = new ScalarIntValue(4);
+            var thirdObject = new ScalarIntValue (4);
 
-            var length = InvokeDelegate(stack, "LENGTH");
-            Assert.AreEqual(ScalarIntValue.Two, length);
+            var length = InvokeDelegate (stack, "LENGTH");
+            Assert.AreEqual (ScalarIntValue.Two, length);
 
-            Assert.IsTrue((BooleanValue)InvokeDelegate(stack, "CONTAINS", zedObject));
-            Assert.IsTrue((BooleanValue)InvokeDelegate(stack, "CONTAINS", firstObject));
-            Assert.IsFalse((BooleanValue)InvokeDelegate(stack, "CONTAINS", secondObject));
-            Assert.IsFalse((BooleanValue)InvokeDelegate(stack, "CONTAINS", thirdObject));
+            Assert.IsTrue ((BooleanValue)InvokeDelegate (stack, "CONTAINS", zedObject));
+            Assert.IsTrue ((BooleanValue)InvokeDelegate (stack, "CONTAINS", firstObject));
+            Assert.IsFalse ((BooleanValue)InvokeDelegate (stack, "CONTAINS", secondObject));
+            Assert.IsFalse ((BooleanValue)InvokeDelegate (stack, "CONTAINS", thirdObject));
         }
     }
 }
