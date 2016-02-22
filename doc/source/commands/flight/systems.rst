@@ -37,13 +37,13 @@ Ship Systems
 .. object:: SET SASMODE TO value.
 
     :access: Get/Set
-    :type: string
+    :type: :ref:`string <string>`
 
     Getting this variable will return the currently selected mode.  Where ``value`` is one of the valid strings listed below, this will set the stock SAS mode for the cpu vessel::
 
         SET SASMODE TO value.
 
-    It is the equivalent to clicking on the buttons next to the nav ball while manually piloting the craft, and will respect the current mode of the nav ball (orbital, surface, or target velocity).  Valid strings for ``value`` are ``"PROGRADE"``, ``"RETROGRADE"``, ``"NORMAL"``, ``"ANTINORMAL"``, ``"RADIALOUT"``, ``"RADIALIN"``, ``"TARGET"``, ``"ANTITARGET"``, ``MANEUVER``, ``"STABILITYASSIST"``, and ``"STABILITY"``.  A null or empty string will default to stability assist mode, however any other invalid string will throw an exception.  This feature will respect career mode limitations, and will throw an exception if the current vessel is not able to use the mode passed to the command.  An exception is also thrown if ``"TARGET"`` or ``"ANTITARGET"`` are used, but no target is selected.
+    It is the equivalent to clicking on the buttons next to the nav ball while manually piloting the craft, and will respect the current mode of the nav ball (orbital, surface, or target velocity).  Valid strings for ``value`` are ``"PROGRADE"``, ``"RETROGRADE"``, ``"NORMAL"``, ``"ANTINORMAL"``, ``"RADIALOUT"``, ``"RADIALIN"``, ``"TARGET"``, ``"ANTITARGET"``, ``"MANEUVER"``, ``"STABILITYASSIST"``, and ``"STABILITY"``.  A null or empty string will default to stability assist mode, however any other invalid string will throw an exception.  This feature will respect career mode limitations, and will throw an exception if the current vessel is not able to use the mode passed to the command.  An exception is also thrown if ``"TARGET"`` or ``"ANTITARGET"`` are used, but no target is selected.
 		
 .. warning:: SASMODE does not work with RemoteTech
 
@@ -68,7 +68,7 @@ Ship Systems
 .. global:: TARGET
 
     :access: Get/Set
-    :type: string
+    :type: :ref:`string <string>`
 
     Where ``name`` is the name of a target vessel or planet, this will set the current target::
 
