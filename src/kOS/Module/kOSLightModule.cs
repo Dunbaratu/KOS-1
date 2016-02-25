@@ -28,6 +28,12 @@ namespace kOS.Module
 
         [KSPField(isPersistant = false, guiActive = false)]
         public string animationName = "";
+        
+        [KSPField(isPersistant = false, guiActive = false)]
+        public string pulseWidth = "";
+
+        [KSPField(isPersistant = false, guiActive = false)]
+        public string gapWidth = "";
 
         private double lastTime = double.MaxValue;
 
@@ -38,6 +44,7 @@ namespace kOS.Module
         private Renderer[] renderers;
         private Animation[] animations;
         private bool lastLightModuleIsOn = false;
+        
         public override void OnLoad(ConfigNode node)
         {
             updateReferences();
