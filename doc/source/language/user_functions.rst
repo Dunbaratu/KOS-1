@@ -255,7 +255,11 @@ example 3::
     FUNCTION MYFUNC {
       PARAMETER P1.
       PARAMETER P2.
+<<<<<<< HEAD
       PAREMETER P3 is 0.
+=======
+      PARAMETER P3 is 0.
+>>>>>>> pull-review/1454
       PARAMETER P4 is "cheese".
 
       print P1 + ", " + P2 + ", " + P3 + ", " + P4.
@@ -570,7 +574,7 @@ Example::
       return getSum(aList) / aList:LENGTH.
     }.
 
-    set L to LIST();
+    set L to LIST().
     L:ADD(10).
     L:ADD(9).
     print "mean average is " + getMean(L).
