@@ -95,6 +95,10 @@ namespace kOS.Safe.Encapsulation
             AddSuffix("INSERT",   new TwoArgsSuffix<ScalarValue, T>     ((index, toAdd) => Collection.Insert(index, toAdd)));
             AddSuffix("REMOVE",   new OneArgsSuffix<ScalarValue>        (toRemove => Collection.RemoveAt(toRemove)));
             AddSuffix("SUBLIST",  new TwoArgsSuffix<ListValue, ScalarValue, ScalarValue>(SubListMethod));
+<<<<<<< HEAD
+=======
+            AddSuffix("JOIN",     new OneArgsSuffix<StringValue, StringValue>(Join));
+>>>>>>> pull-review/1454
        }
 
         // This test case was added to ensure there was an example method with more than 1 argument.
@@ -114,12 +118,21 @@ namespace kOS.Safe.Encapsulation
         }
 
         public Structure GetIndex(int index)
+<<<<<<< HEAD
         {
             return Collection[index];
         }
 
         public Structure GetIndex(Structure index)
         {
+=======
+        {
+            return Collection[index];
+        }
+
+        public Structure GetIndex(Structure index)
+        {
+>>>>>>> pull-review/1454
             if (index is ScalarValue)
             {
                 int i = Convert.ToInt32(index);  // allow expressions like (1.0) to be indexes
@@ -133,6 +146,7 @@ namespace kOS.Safe.Encapsulation
         {
             int idx;
             try
+<<<<<<< HEAD
             {
                 idx = Convert.ToInt32(index);
             }
@@ -147,9 +161,27 @@ namespace kOS.Safe.Encapsulation
         public void SetIndex(int index, Structure value)
         {
             Collection[index] = (T)value;
+=======
+            {
+                idx = Convert.ToInt32(index);
+            }
+            catch
+            {
+                throw new KOSException("The index must be an integer number");
+            }
+            Collection[idx] = (T)value;
+>>>>>>> pull-review/1454
         }
 
+        public void SetIndex(int index, Structure value)
+        {
+            Collection[index] = (T)value;
+        }
 
+        private StringValue Join(StringValue separator)
+        {
+            return string.Join(separator, Collection.Select(i => i.ToString()).ToArray());
+        }
     }
 
     public class ListValue : ListValue<Structure>
