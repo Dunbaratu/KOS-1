@@ -37,7 +37,7 @@ Ship Systems
 .. object:: SET SASMODE TO value.
 
     :access: Get/Set
-    :type: string
+    :type: :ref:`string <string>`
 
     Getting this variable will return the currently selected mode.  Where ``value`` is one of the valid strings listed below, this will set the stock SAS mode for the cpu vessel::
 
@@ -68,7 +68,7 @@ Ship Systems
 .. global:: TARGET
 
     :access: Get/Set
-    :type: string
+    :type: :ref:`string <string>`
 
     Where ``name`` is the name of a target vessel or planet, this will set the current target::
 
