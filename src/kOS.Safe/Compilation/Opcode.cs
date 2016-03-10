@@ -467,16 +467,27 @@ namespace kOS.Safe.Compilation
         protected OperandPair Operands { get; private set; }
 
         public override void Execute(ICpu cpu)
-        {            
+        {
             object right = cpu.PopValue();
             object left = cpu.PopValue();
 
             var operands = new OperandPair(left, right);
 
+            Utilities.Debug.DebugTimes.Clear();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             Calculator calc = Calculator.GetCalculator(operands);
+            Utilities.Debug.DebugTimes[ GetType().Name+".Execute(): Calculator.GetCalculator()" ] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;
             Operands = operands;
+            watch = System.Diagnostics.Stopwatch.StartNew();
             object result = ExecuteCalculation(calc);
+            Utilities.Debug.DebugTimes[ GetType().Name+".Execute(): ExecuteCalculation()"] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;
             cpu.PushStack(result);
+            
+            System.Console.WriteLine(":::::::BinaryOpcode Profile:::::::");
+            foreach (string key in Utilities.Debug.DebugTimes.Keys)
+                System.Console.WriteLine(string.Format("  {0}, {1:F5} ms", key, Utilities.Debug.DebugTimes[key]));
         }
 
         protected virtual object ExecuteCalculation(Calculator calc)

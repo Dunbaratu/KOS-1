@@ -193,7 +193,7 @@ namespace kOS.Safe.Test.Opcode
         {
             throw new NotImplementedException();
         }
-
+        
         public bool BuiltInExists(string functionName)
         {
             throw new NotImplementedException();

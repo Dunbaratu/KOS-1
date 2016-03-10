@@ -25,7 +25,7 @@ namespace kOS.Safe.Compilation
             var stringCount = 0;
             var specialCount = 0;
             var boolCount = 0;
-
+            
             if (operandPair.Left is ScalarValue) scalarCount++;
             if (operandPair.Left is StringValue) stringCount++;
             if (operandPair.Left is ISuffixed) specialCount++;

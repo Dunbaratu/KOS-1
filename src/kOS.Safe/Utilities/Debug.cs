@@ -92,5 +92,8 @@ namespace kOS.Safe.Utilities
 
             return codeFragment.Aggregate(string.Empty, (current, s) => current + (s + "\n"));
         }
+
+        public static Dictionary<string, double> DebugTimes { get { return debugTimes;} }  // maybe eraseme later?
+        private static Dictionary<string, double> debugTimes = new Dictionary<string, double>();
     }
 }

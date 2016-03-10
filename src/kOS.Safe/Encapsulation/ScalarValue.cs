@@ -78,7 +78,11 @@ namespace kOS.Safe.Encapsulation
 
         public int GetIntValue()
         {
-            return Convert.ToInt32(Value);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            int val = Convert.ToInt32(Value);
+            Utilities.Debug.DebugTimes["ScalarValue.GetIntValue(): Convert.ToInt32()"] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;            
+            return val;
         }
 
         public double GetDoubleValue()
@@ -142,10 +146,15 @@ namespace kOS.Safe.Encapsulation
 
         public static ScalarValue Add(ScalarValue val1, ScalarValue val2)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             if (val1.IsInt && val2.IsInt)
             {
+                Utilities.Debug.DebugTimes[ "ScalarValue.Add(): beginning-to-spot-AAA" ] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;            
                 return Create(val1.GetIntValue() + val2.GetIntValue());
             }
+            Utilities.Debug.DebugTimes[ "ScalarValue.Add(): beginning-to-spot-BBB" ] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;            
             return Create(val1.GetDoubleValue() + val2.GetDoubleValue());
         }
 
@@ -233,7 +242,14 @@ namespace kOS.Safe.Encapsulation
 
         public static ScalarValue operator +(ScalarValue val1, ScalarValue val2)
         {
-            return Add(val1, val2);
+            // It was just this, but I exploded it so I could profile it:
+            //     return Add(val1, val2);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            ScalarValue val = Add(val1, val2);
+            watch.Stop();
+            Utilities.Debug.DebugTimes[ "ScalarValue.+operator:" ] =
+                                           watch.ElapsedTicks*1000D / System.Diagnostics.Stopwatch.Frequency;            
+            return val;
         }
 
         public static ScalarValue operator ++(ScalarValue val)
