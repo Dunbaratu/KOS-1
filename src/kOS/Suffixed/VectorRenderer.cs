@@ -10,7 +10,7 @@ using UnityEngine;
 namespace kOS.Suffixed
 {
     [kOS.Safe.Utilities.KOSNomenclature("Vecdraw")]
-    public class VectorRenderer : Structure, IUpdateObserver, IKOSScopeObserver
+    public class VectorRenderer : Structure, IUpdateObserver
     {
         public Vector3d Vector { get; set; }
         public RgbaColor Color { get; set; }
@@ -61,24 +61,14 @@ namespace kOS.Suffixed
             this.shared = shared;
             InitializeSuffixes();
         }
-
-        // Implementation of KOSSCopeObserver interface:
-        // ---------------------------------------------
-        public int LinkCount { get; set; }
-
-        public void ScopeLost()
+        
+        ~VectorRenderer()
         {
-            // When no kos script variables can still access me,
-            // tell Unity to make me disappear, and also
-            // tell UpdateHandler to take me out of its list
-            // (Note that if I didn't do this,
-            // then as far as C# thinks, I wouldn't be orphaned because
-            // UpdateHandler is holding a reference to me.)
             SetShow(false);
         }
 
         /// <summary>Make all vector renderers invisible everywhere in the kOS module.</summary>
-        static public void ClearAll(UpdateHandler handler)
+        public static void ClearAll(UpdateHandler handler)
         {
             // Take a copy of the list because the items will be deleted from the update handler
             // as SetShow() gets called, and .NET won't let you iterate over the collection
@@ -401,6 +391,7 @@ namespace kOS.Suffixed
 
         public void Dispose()
         {
+            SetShow(false);
             updateHandler.RemoveObserver(this);
         }
     }
