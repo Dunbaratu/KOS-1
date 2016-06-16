@@ -171,15 +171,40 @@ namespace kOS.Function
     {
         public override void Execute(SharedObjects shared)
         {
-            var when = GetTimeSpan(PopValueAssert(shared));
-            var body = (BodyTarget) PopValueAssert(shared);
-            if (body == null)
-                throw new KOSInvalidArgumentException("orbit", "body", "no body found");
-            Vector vel = GetVector(PopValueAssert(shared));
-            Vector pos = GetVector(PopValueAssert(shared));
-            AssertArgBottomAndConsume(shared);
-            var result = new OrbitInfo(pos, vel, body, when.ToUnixStyleTime(), shared);
-            ReturnValue = result;
+            int totalArgs = CountRemainingArgs(shared);
+            if (totalArgs < 5) {
+                // Version 1: construct based on position/velocity state vectors.
+                
+                //
+                // TODO - maybe swap these args around and put body first?
+                //
+                var when = GetTimeSpan(PopValueAssert(shared));
+                var body = (BodyTarget) PopValueAssert(shared);
+                if (body == null)
+                    throw new KOSInvalidArgumentException("orbit", "body", "no body found");
+                 Vector vel = GetVector(PopValueAssert(shared));
+                Vector pos = GetVector(PopValueAssert(shared));
+                AssertArgBottomAndConsume(shared);
+                var result = new OrbitInfo(pos, vel, body, when.ToUnixStyleTime(), shared);
+                ReturnValue = result;
+            } else {
+                // Version 2: construct based on elliptical orbit parameters.
+                
+                double epochUT = 0.0d;
+                double epochMeanA = 0.0d;
+                if (totalArgs >= 8)
+                    epochUT = GetDouble(PopValueAssert(shared));
+                if (totalArgs >= 7)
+                    epochMeanA = GetDouble(PopValueAssert(shared));
+                double argPe = GetDouble(PopValueAssert(shared));
+                double lan = GetDouble(PopValueAssert(shared));
+                double sma = GetDouble(PopValueAssert(shared));
+                double ecc = GetDouble(PopValueAssert(shared));
+                double inc = GetDouble(PopValueAssert(shared));
+                BodyTarget body = (BodyTarget) PopValueAssert(shared);
+                AssertArgBottomAndConsume(shared);
+                ReturnValue = new OrbitInfo(shared, body, inc, ecc, sma, lan, argPe, epochMeanA, epochUT);
+            }
         }
     }
 

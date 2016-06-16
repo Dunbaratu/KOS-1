@@ -35,15 +35,23 @@ namespace kOS.Suffixed
             name = "<unnamed>";
         }
 
+        /// <summary>
+        /// Constructs an OrbitInfo given an initial position/velocity pair of state vectors.
+        /// </summary>
+        /// <param name="pos">Position in current ship-raw coords (which are ship-centered)</param>
+        /// <param name="vel">Velocity in current ship-raw coords (which are body-centered)</param>
+        /// <param name="body">Body the orbit goes around</param>
+        /// <param name="when">Universal timestamp that the pos/vel state is taken from</param>
+        /// <param name="sharedObj"></param>
         public OrbitInfo(Vector pos, Vector vel, BodyTarget body, double when, SharedObjects sharedObj) : this()
         {
             Shared = sharedObj;
             orbit = new Orbit();
-            // FIXME: there is a bug here in translating betwee ship-local and body-centered coordinate systems, if you
+            // FIXME: there is a bug here in translating between ship-local and body-centered coordinate systems, if you
             // are below the body.inverseRotationAltitude when you try to compute an orbit.  you may be off by a rotation.
             // uncertain of the exact incantations to fix.  workaround is to get yourself into orbit first before trying
             // to compute orbits from this function.  mechjeb also has this bug, but nobody has reported it or fixed it.
-            // it should mostly troll people who are doing orbital computation testing while on the launchpad (sometimes).
+            // It should mostly affect people who are doing orbital computation testing while on the launchpad (sometimes).
             orbit.UpdateFromStateVectors(Utils.SwapYZ(pos - body.GetPosition()), Utils.SwapYZ(vel), body.Body, when);
             if (double.IsNaN(orbit.LAN))
             {
@@ -67,10 +75,38 @@ namespace kOS.Suffixed
             }
             name = "<user defined>";
         }
+        
+        /// <summary>
+        /// Construct a new OrbitInfo based on the elliptical parameters of
+        /// the orbit.
+        /// </summary>
+        /// <param name="sharedObj"></param>
+        /// <param name="body">body being orbited</param>
+        /// <param name="inc">inclination</param>
+        /// <param name="ecc">eccentricity</param>
+        /// <param name="sma">semi-major axis</param>
+        /// <param name="lan">longitude of the ascending node</param>
+        /// <param name="argPe">argument of periapsis</param>
+        /// <param name="meanAnoEpoch">mean anomaly at epoch</param>
+        /// <param name="epochUT">universal timestamp of epoch</param>
+        public OrbitInfo(SharedObjects sharedObj,
+                         BodyTarget body,
+                         ScalarDoubleValue inc,
+                         ScalarDoubleValue ecc,
+                         ScalarDoubleValue sma,
+                         ScalarDoubleValue lan,
+                         ScalarDoubleValue argPe,
+                         ScalarDoubleValue meanAnoEpoch,
+                         ScalarDoubleValue epochUT )
+        {
+           Shared = sharedObj;
+           orbit = new Orbit(inc, ecc, sma, lan, argPe, meanAnoEpoch, epochUT, body.Body);
+           name = "<user defined>";
+        }
 
         private void InitializeSuffixes()
         {
-            AddSuffix("NAME", new Suffix<StringValue>(() => name));
+            AddSuffix("NAME", new SetSuffix<StringValue>(() => name, value => name = value.ToString()));
             AddSuffix("APOAPSIS", new Suffix<ScalarValue>(() => orbit.ApA));
             AddSuffix("PERIAPSIS", new Suffix<ScalarValue>(() => orbit.PeA));
             AddSuffix("BODY", new Suffix<BodyTarget>(() => new BodyTarget(orbit.referenceBody, Shared)));
