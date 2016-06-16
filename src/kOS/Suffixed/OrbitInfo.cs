@@ -4,6 +4,8 @@ using System;
 using kOS.Serialization;
 using kOS.Safe.Serialization;
 using kOS.Safe;
+using kOS.Utilities;
+using UnityEngine;
 
 namespace kOS.Suffixed
 {
@@ -13,7 +15,7 @@ namespace kOS.Suffixed
         private Orbit orbit;
         public SharedObjects Shared { get; set; }
         private string name;
- 
+
         public OrbitInfo()
         {
             InitializeSuffixes();
@@ -25,12 +27,45 @@ namespace kOS.Suffixed
             Shared = sharedObj;
             name = orb.GetName();
         }
-        
+
         public OrbitInfo( Orbit orb, SharedObjects sharedObj) : this()
         {
             Shared = sharedObj;
             orbit = orb;
             name = "<unnamed>";
+        }
+
+        public OrbitInfo(Vector pos, Vector vel, BodyTarget body, double when, SharedObjects sharedObj) : this()
+        {
+            Shared = sharedObj;
+            orbit = new Orbit();
+            // FIXME: there is a bug here in translating betwee ship-local and body-centered coordinate systems, if you
+            // are below the body.inverseRotationAltitude when you try to compute an orbit.  you may be off by a rotation.
+            // uncertain of the exact incantations to fix.  workaround is to get yourself into orbit first before trying
+            // to compute orbits from this function.  mechjeb also has this bug, but nobody has reported it or fixed it.
+            // it should mostly troll people who are doing orbital computation testing while on the launchpad (sometimes).
+            orbit.UpdateFromStateVectors(Utils.SwapYZ(pos - body.GetPosition()), Utils.SwapYZ(vel), body.Body, when);
+            if (double.IsNaN(orbit.LAN))
+            {
+                // not sure if this matters, but avoids annoying NaN issues in KOS with perfectly equatorial orbits
+                orbit.LAN = 0;
+            }
+            // fix from MJ for perfectly circular orbits (not sure if any of the precision here matters)
+            if (double.IsNaN(orbit.argumentOfPeriapsis))
+            {
+                Vector3d vectorToAN = Quaternion.AngleAxis(-(float)orbit.LAN, Planetarium.up) * Planetarium.right;
+                Vector3d vectorToPe = Utils.SwapYZ(orbit.eccVec);
+
+                double cosArgumentOfPeriapsis = Vector3d.Dot(vectorToAN, vectorToPe) / (vectorToAN.magnitude * vectorToPe.magnitude);
+                if(cosArgumentOfPeriapsis > 1) {
+                    orbit.argumentOfPeriapsis = 0;
+                } else if (cosArgumentOfPeriapsis < -1) {
+                    orbit.argumentOfPeriapsis = 180;
+                } else {
+                    orbit.argumentOfPeriapsis = Math.Acos(cosArgumentOfPeriapsis) * 180 / Math.PI;;
+                }
+            }
+            name = "<user defined>";
         }
 
         private void InitializeSuffixes()
@@ -50,7 +85,9 @@ namespace kOS.Suffixed
             AddSuffix("MEANANOMALYATEPOCH", new Suffix<ScalarValue>(() => Utilities.Utils.DegreeFix(Utilities.Utils.RadiansToDegrees(orbit.meanAnomalyAtEpoch), 0.0)));
             AddSuffix("TRANSITION", new Suffix<StringValue>(() => orbit.patchEndTransition.ToString()));
             AddSuffix("POSITION", new Suffix<Vector>(() => GetPositionAtUT( new TimeSpan(Planetarium.GetUniversalTime() ) )));
+            AddSuffix("POSITIONAT", new OneArgsSuffix<Vector,ScalarValue>(ut => GetPositionAtUT( new TimeSpan(ut))));
             AddSuffix("VELOCITY", new Suffix<OrbitableVelocity>(() => GetVelocityAtUT( new TimeSpan(Planetarium.GetUniversalTime() ) )));
+            AddSuffix("VELOCITYAT", new OneArgsSuffix<OrbitableVelocity,ScalarValue>(ut => GetVelocityAtUT( new TimeSpan(ut))));
             AddSuffix("NEXTPATCH", new Suffix<OrbitInfo>(GetNextPatch));
             AddSuffix("HASNEXTPATCH", new Suffix<BooleanValue>(GetHasNextPatch));
             AddSuffix("NEXTPATCHETA", new Suffix<ScalarValue>(GetNextPatchETA));
@@ -98,7 +135,7 @@ namespace kOS.Suffixed
                 surfVel = new Vector( orbVel.X, orbVel.Y, orbVel.Z );
             return new OrbitableVelocity( orbVel, surfVel );
         }
-        
+
         /// <summary>
         /// Return the next OrbitInfo after this one (i.e. transitional encounter)
         /// </summary>
