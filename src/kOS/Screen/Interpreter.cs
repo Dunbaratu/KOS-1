@@ -4,6 +4,7 @@ using System.Text;
 using kOS.Execution;
 using kOS.Safe.Compilation;
 using kOS.Safe.Execution;
+using kOS.Safe.Encapsulation;
 using kOS.Safe.Screen;
 using kOS.Safe.UserIO;
 using kOS.Safe.Persistence;
@@ -15,13 +16,21 @@ namespace kOS.Screen
         public const string InterpreterName = "interpreter";
         private readonly List<string> commandHistory = new List<string>();
         private int commandHistoryIndex;
+
+        /// <summary>
+        /// locked = true when this interpreter shouldn't process input
+        /// because there is another program running "on top" of it.
+        /// </summary>
         private bool locked;
+
+        private UniqueSetValue<UserDelegate> keypressWatchers;
 
         protected SharedObjects Shared { get; private set; }
 
         public Interpreter(SharedObjects shared)
         {
             Shared = shared;
+            keypressWatchers = new UniqueSetValue<UserDelegate>();
         }
 
         protected override void NewLine()
@@ -56,6 +65,8 @@ namespace kOS.Screen
 
         public override void Type(char ch)
         {
+            SendToKeypressWatchers(ch); // unconditionally do this because even when the interpreter is locked, programs should still see the key.
+            
             if (!locked)
             {
                 base.Type(ch);
@@ -73,6 +84,8 @@ namespace kOS.Screen
                            // does to the screenbuffers on pressing enter.
             }
 
+            SendToKeypressWatchers(key); // unconditionally do this because even when the interpreter is locked, programs should still see the key.
+
             if (locked) return false;
 
             switch (key)
@@ -88,6 +101,12 @@ namespace kOS.Screen
                     break;
             }
             return true;
+        }
+        
+        public void SendToKeypressWatchers(char ch)
+        {
+            foreach (UserDelegate del in keypressWatchers)
+                Shared.Cpu.AddTrigger(del, new StringValue(ch));
         }
 
         private void AddCommandHistoryEntry(string commandText)
@@ -121,6 +140,11 @@ namespace kOS.Screen
         public string GetCommandHistoryAbsolute(int absoluteIndex)
         {
             return commandHistory[absoluteIndex-1];
+        }
+        
+        public UniqueSetValue<UserDelegate> GetKeypressWatchers()
+        {
+            return keypressWatchers;
         }
 
         protected virtual void ProcessCommand(string commandText)

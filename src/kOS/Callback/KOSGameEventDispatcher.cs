@@ -6,6 +6,7 @@ using kOS.Safe.Callback;
 using kOS;
 using kOS.Suffixed;
 using kOS.Suffixed.Part;
+using kOS.Screen;
 
 namespace kOS.Callback
 {
@@ -90,8 +91,8 @@ namespace kOS.Callback
 		private UniqueSetValue<UserDelegate> switchVesselNotifyees = null;
 		private Dictionary<Vessel, UniqueSetValue<UserDelegate>> soiChangeNotifyees = null;
 		private Dictionary<Part, UniqueSetValue<UserDelegate>> partCoupleNotifyees = null;
-		private Dictionary<Part, UniqueSetValue<UserDelegate>> partUndockNotifyees = null;
-
+		private Dictionary<Part, UniqueSetValue<UserDelegate>> partUndockNotifyees = null;  
+        
 		private void ClearLists()
 		{
 			// WHEN IMPLEMENTING A NEW EVENT TYPE: Add a few lines here similar to to the ones you see below.
@@ -109,6 +110,7 @@ namespace kOS.Callback
 
 			if (partUndockNotifyees != null ) partUndockNotifyees.Clear();
 			GameEvents.onPartUndock.Remove(SendToPartUndockNotifyees);
+			
 		}
 		
 		// WHEN IMPLEMENTING A NEW EVENT TYPE:
@@ -260,5 +262,6 @@ namespace kOS.Callback
 
 			// The event has no data available on which other part it had been attached to, apparently.
 		}
+		
 	}
 }

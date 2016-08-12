@@ -11,6 +11,7 @@ namespace kOS.Binding
             shared.BindingMgr.AddGetter("SESSIONTIME", () => shared.Cpu.SessionTime);
             shared.BindingMgr.AddGetter("VOLUME:NAME", () => shared.VolumeMgr.CurrentVolume.Name);
             shared.BindingMgr.AddGetter("TERMINAL", () => new TerminalStruct(shared));
+            shared.BindingMgr.AddGetter("KEYCODES", () => Keycodes.Instance);
         }
     }
 }

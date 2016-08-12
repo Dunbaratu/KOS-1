@@ -1,4 +1,5 @@
 using kOS.Safe.Utilities;
+using kOS.Safe.Encapsulation;
 
 namespace kOS.Safe.Screen
 {
@@ -10,5 +11,6 @@ namespace kOS.Safe.Screen
         void SetInputLock(bool isLocked);
         bool IsAtStartOfCommand();
         void Reset();
+        UniqueSetValue<UserDelegate> GetKeypressWatchers();
     }
 }

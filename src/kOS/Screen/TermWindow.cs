@@ -560,7 +560,7 @@ namespace kOS.Screen
                 default:
                     break;
             }
-
+            
             // Printable ASCII section of Unicode - the common vanilla situation
             // (Idea: Since this is all Unicode anyway, should we allow a wider range to
             // include multi-language accent characters and so on?  Answer: to do so we'd

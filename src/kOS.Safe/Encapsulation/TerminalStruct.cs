@@ -151,6 +151,7 @@ namespace kOS.Safe.Encapsulation
                                                                     2,
                                                                     "Character height on in-game terminal screen in pixels"));
             AddSuffix("RESIZEWATCHERS", new NoArgsSuffix<UniqueSetValue<UserDelegate>>(() => resizeWatchers));
+            AddSuffix("KEYPRESSWATCHERS", new NoArgsSuffix<UniqueSetValue<UserDelegate>>(() => Shared.Interpreter.GetKeypressWatchers()));
         }
         
 
