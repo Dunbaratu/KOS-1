@@ -1,6 +1,21 @@
 kOS Mod Changelog
 =================
 
+# v1.1.5 many bugfixes.  Release for KSP 1.3.
+
+A release primarily dedicated to nothing but bug fixes.  New
+features were put off in order to just get a bugfix release out.
+
+# v1.1.4 backport for ksp 1.2.2
+
+The same as v1.1.5 aboe, but backported into KSP 1.2.2 so RO can use it.
+
+We agonized a while over the version numbering - what to call this,
+given that it's not for KSP 1.3.  In the end we decided to
+interleave the numbers such that the KSP 1.2.2 backport is
+always the lower number of the two releases, just so people don't
+think it's an improvement over the latest 1.3 release.
+
 # v1.1.1 (for KSP 1.3) KSP 1.3 compatibility recompile.
 
 No known intentional changes other than editing a few method calls

@@ -128,7 +128,7 @@ namespace kOS.Module
             }
         }
 
-        public override string DisplaySection { get { return "kOS"; } }
+        // For KSP 1.3 only: public override string DisplaySection { get { return "kOS"; } }
 
         public override string Section
         {
@@ -182,7 +182,6 @@ namespace kOS.Module
                 if (ipu > 0)
                 {
                     kOSSettingsChecker.QueueDialog(new MultiOptionDialog(
-                            "Migration Dialog",
                             MIGRATION_DIALOG_TEXT,
                             "kOS",
                             HighLogic.UISkin,
