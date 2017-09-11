@@ -92,10 +92,6 @@ namespace kOS.Control
             c.mainThrottle = (float)Value;
         }
 
-        void IFlightControlParameter.UpdateState()
-        {
-        }
-
         void IFlightControlParameter.UpdateValue(object value, SharedObjects shared)
         {
             if (!Enabled)

@@ -1320,11 +1320,6 @@ namespace kOS.Control
             return Value;
         }
 
-        void IFlightControlParameter.UpdateState()
-        {
-            //throw new NotImplementedException();
-        }
-
         void IFlightControlParameter.UpdateAutopilot(FlightCtrlState c)
         {
             this.OnFlyByWire(c);
