@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using kOS.Safe.UserIO;
+using kOS.Safe.Encapsulation;
 
 namespace kOS.Safe.Screen
 {
@@ -25,6 +26,17 @@ namespace kOS.Safe.Screen
         // ---------------------------------------------------------------------------        
         /// <summary>True means the terminal screen should be shown in reversed colors.</summary>
         public bool ReverseScreen {get; set;}
+
+        /// <summary>
+        /// Gets or sets the global background color of the terminal (not to be
+        /// confused with individual background colors of single character cells
+        /// which might differ.  This is the inherited background color when you
+        /// say nothing.)
+        /// </summary>
+        /// <value>The color of the background.</value>
+        public IRgbaColor BackgroundColor {get; set;}
+
+        public IRgbaColor ErasemeMonochromeColor {get; set;} // eraseme: Remove before release - SET ALPHA to ZERO to flag the terminal as being color-capable.
         /// <summary>True means a beep should make the terminal screen flash silently in lieu of an audio beep.</summary>
         public bool VisualBeep {get; set;}
         public int CharacterPixelWidth { get; set; }
@@ -71,6 +83,9 @@ namespace kOS.Safe.Screen
 
             RowCount = DEFAULT_ROWS;
             ColumnCount = DEFAULT_COLUMNS;
+
+            BackgroundColor = new RgbaColor(0f, 0f, 0f, 1f);
+            ErasemeMonochromeColor = new RgbaColor(1f, 1f, 1f, 1f);
             InitializeBuffer();
         }
 

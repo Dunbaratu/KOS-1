@@ -38,10 +38,19 @@ namespace kOS.Screen
         private static string root;
         private static readonly Color color = new Color(1, 1, 1, 1); // opaque window color when focused
         private static readonly Color colorAlpha = new Color(1f, 1f, 1f, 0.8f); // slightly less opaque window color when not focused.
-        private static readonly Color bgColor = new Color(0.0f, 0.0f, 0.0f, 1.0f); // black background of terminal
-        private static readonly Color textColor = new Color(0.4f, 1.0f, 0.2f, 1.0f); // font color on terminal
+        private static readonly Color monoBGColor = new Color(0.0f, 0.0f, 0.0f); // remember what the black background of terminal is when changing BG is disallowed.
+        private static readonly Color monoFGColor = new Color(1f, 1f, 1f, 1f); // mono text color to force it to use when color change is disallowed.
+        private Color bgColor = new Color(0.0f, 0.0f, 0.0f); // black background of terminal - might change if color enabled.
+        private Color bleedingBGColor = new Color(0.0f, 0.0f, 0.0f);
+        private Color bleedingFGColor = new Color(0.0f, 0.0f, 0.0f);
+        private Color prevBGColor = new Color(1f, 1f, 1f, 0f); // what the background was in the prev pass (deliberately bogus the first pass to force recalc).
+        private bool prevReversingScreen = false; // were we reversing screen in the previous pass? needed to know if some info is dirty.
+        private Color textColor = monoFGColor;
         private static readonly Color textColorOff = new Color(0.8f, 0.8f, 0.8f, 0.7f); // font color when power starved.
         private static readonly Color textColorOffAlpha = new Color(0.8f, 0.8f, 0.8f, 0.8f); // font color when power starved and not focused.
+        private bool hasColor = true; // will be false for monochrome terminals.
+        private bool prevHasColor = false; // tracking whether the setting changed - if so some logic needs to trigger. Set bogus at first to force this on first pass.
+        // TODO - Maybe support a color rounding terminal that only does a small pallete like ANSI color?  It would "mash" the colors into the nearest allowed.
         private Rect closeButtonRect;
         private Rect resizeButtonCoords;
         private GUIStyle tinyToggleStyle;
@@ -93,6 +102,7 @@ namespace kOS.Screen
         private bool telnetsGotRepainted;
 
         private Texture2D terminalImage;
+        private Texture2D terminalFlatBGtexture;
         private Texture2D terminalFrameImage;
         private Texture2D terminalFrameActiveImage;
         private GUIStyle terminalImageStyle;
@@ -207,6 +217,61 @@ namespace kOS.Screen
             style.stretchWidth = true;
             style.stretchHeight = true;
             return style;
+        }
+
+        /// <summary>
+        /// Make a flat one-color, 1 pixel texture in the given color:
+        /// </summary>
+        /// <returns>The flat background style same size as.</returns>
+        private Texture2D CreateFlatTexture(Color bgColor)
+        {
+            Texture2D onePixelBg = new Texture2D(1, 1);
+            onePixelBg.SetPixel(0, 0, bgColor);
+            onePixelBg.Apply();
+            return onePixelBg;
+        }
+
+        /// <summary>
+        /// Any color on the terminal should let the BG image "bleed" through
+        /// more the closer to "black" it gets.  (The not-quite black of the glass
+        /// terminal screen should become more apparent the more you darken the
+        /// color.)
+        /// </summary>
+        /// <returns>The background input color.</returns>
+        /// <param name="inColor">the background color with alpha channel altered to bleed through more if darker.</param>
+        private Color BleedBGThrough(Color inColor)
+        {
+            return new Color(inColor.r, inColor.g, inColor.b, (inColor.grayscale * inColor.a));
+        }
+
+        /// <summary>
+        /// Maybe reverse the color, if the boolean flag says to.
+        /// </summary>
+        /// <returns>The reverse color.</returns>
+        /// <param name="inColor">In text color.</param>
+        /// <param name="reverse">If set to <c>true</c> reverse.</param>
+        private Color MaybeReverseColor(Color inColor, bool reverse)
+        {
+            if (!reverse)
+                return inColor;
+
+            if (hasColor)
+            {
+                // If color, we want to invert the color cube - reversing every component but alpha:
+                return new Color(1f - inColor.r, 1f - inColor.g, 1f - inColor.b, inColor.a);
+            }
+            else
+            {
+                // If monochrome, then use intensity comparison to decide if this color
+                // is more like FG or more like BG, then use that to "round off" the inversion
+                // to exactly FG or BG:
+                float distanceFromFG = Math.Abs(textColor.grayscale - inColor.grayscale);
+                float distanceFromBG = Math.Abs(bgColor.grayscale - inColor.grayscale);
+                if (distanceFromBG < distanceFromFG) // If currently closer to background
+                    return textColor; // emit foreground
+                else // if currently closer to foreground
+                    return bgColor; // emit background
+            }
         }
 
         public void OnDestroy()
@@ -366,7 +431,7 @@ namespace kOS.Screen
             GUI.color = isLocked ? color : colorAlpha;
 
             // Should probably make "gui screen name for my CPU part" into some sort of utility method:
-            ChangeTitle(CalcualteTitle());
+            ChangeTitle(CalculateTitle());
 
             WindowRect = GUI.Window(UniqueId, WindowRect, TerminalGui, TitleText);
             
@@ -832,10 +897,49 @@ namespace kOS.Screen
                 return;
             }
             IScreenBuffer screen = shared.Screen;
-            
-            GUI.color = isLocked ? color : colorAlpha;
 
+            int charHeight = screen.CharacterPixelHeight;
+            int charWidth = screen.CharacterPixelWidth;            
+
+            // bleedingFGColor will be used when drawing characters on the terminal,
+            // but NOT when drawing other GUI elements like the close button and so on:
+
+            GUI.color = isLocked ? color : colorAlpha;
+                
+            DateTime nowTime = DateTime.Now;
+            bool reversingScreen = (nowTime > blinkEndTime) ? screen.ReverseScreen : (!screen.ReverseScreen);
+
+            // TODO: fix this before release:
+            // For now so we can test mono vs color terminal rendering, set this from the
+            // TERMINAL:ERASEMEMONOCOLOR setting, but that setting is temp for debugging and
+            // it's in the wrong spot (in ScreenBuffer when it is a feature of the rendering terminal,
+            // not the screenbuffer).  In future it will need to come from some tech tree or building
+            // upgrade flag or something like that:
+            hasColor = (screen.ErasemeMonochromeColor.Alpha == 0f);
+            if (! hasColor)
+                textColor = Utilities.Utils.FromKosColor(screen.ErasemeMonochromeColor); // TODO: this will be a hardware property of the terminal once we finish this feature, not settable like this.
+            
+            // TODO - move the logic below to a separate method call since it's self-contained:
+
+            // In the GUI pass, make sure we slave our BG color to the ScreenBuffer's BG color 
+            // before drawing anything in case it was changed by the script:
+            bgColor = hasColor ? Utilities.Utils.FromKosColor(screen.BackgroundColor) : monoBGColor;
+
+            // Avoids the texture making work except when needed:
+            if (bgColor != prevBGColor || reversingScreen != prevReversingScreen || hasColor != prevHasColor)
+            {
+                prevBGColor = bgColor;
+                prevReversingScreen = reversingScreen;
+                prevHasColor = hasColor;
+                terminalFlatBGtexture = CreateFlatTexture(AdjustBrightness(BleedBGThrough(MaybeReverseColor(bgColor,reversingScreen)), screen.Brightness));
+            }
+
+            // Draws the terminal texture image as the window background:
             GUI.Label(new Rect(15, 20, WindowRect.width-30, WindowRect.height-55), "", terminalImageStyle);
+
+            // Draws the solid BG color atop the image, semi-transparently:
+            GUI.DrawTexture(new Rect(28, 38, screen.ColumnCount * charWidth + 2, screen.RowCount * charHeight + 2), terminalFlatBGtexture);
+
             if (telnets.Count > 0)
                 DrawTelnetStatus();
 
@@ -877,9 +981,6 @@ namespace kOS.Screen
             screen.Brightness = (double) GUI.VerticalSlider(brightnessRect, (float)screen.Brightness, 1f, 0f);
             GUI.DrawTexture(brightnessButtonRect, brightnessButtonImage);
 
-            int charHeight = screen.CharacterPixelHeight;
-            int charWidth = screen.CharacterPixelWidth;
-
             // Note, pressing these buttons causes a change *next* OnGUI, not on this pass.
             // Changing it in the midst of this pass confuses the terminal to change
             // it's mind about how wide the window should be halfway through painting the
@@ -901,17 +1002,10 @@ namespace kOS.Screen
                 fontGotResized = true;
             }
 
-            currentTextColor = IsPowered ? textColor : textColorOff;
-                        
-            // Paint the background color.
-            DateTime nowTime = DateTime.Now;
-            bool reversingScreen = (nowTime > blinkEndTime) ? screen.ReverseScreen : (!screen.ReverseScreen);
-            if (reversingScreen)
-            {   // In reverse screen mode, draw a big rectangle in foreground color across the whole active screen area:
-                GUI.color = AdjustColor(textColor, screen.Brightness);
-                GUI.DrawTexture(new Rect(15, 20, WindowRect.width-30, WindowRect.height-55), Texture2D.whiteTexture, ScaleMode.ScaleAndCrop );
-            }
-            terminalLetterSkin.label.normal.textColor = AdjustColor(reversingScreen ? bgColor : currentTextColor, screen.Brightness);            
+            Color rawCurrentTextColor = hasColor ? (IsPowered ? textColor : textColorOff) : textColor;
+            currentTextColor = AdjustBrightness(BleedBGThrough(MaybeReverseColor(rawCurrentTextColor, reversingScreen)), screen.Brightness);
+
+            terminalLetterSkin.label.normal.textColor = currentTextColor;            
             GUI.BeginGroup(new Rect(28, 38, screen.ColumnCount * charWidth + 2, screen.RowCount * charHeight + 2)); // +2's for the sake of safety margin
 
             // When loading a quicksave, it is possible for the teminal window to update even though
@@ -950,13 +1044,19 @@ namespace kOS.Screen
             }
             
             GUI.EndGroup();
-            
+
             GUI.color = color; // screen size label was never supposed to be in green like the terminal is:            
 
             // Draw the rounded corner frame atop the chars field, so it covers the sqaure corners of the character zone
             // if they bleed over a bit.  Also, change which variant is used depending on focus:
             if (isLocked)
-                GUI.Label(new Rect(15, 20, WindowRect.width-30, WindowRect.height-55), "", terminalFrameActiveStyle);
+            {
+                Color remember = GUI.color;
+                if (! hasColor)
+                    GUI.color = AdjustBrightness(Utilities.Utils.FromKosColor(screen.ErasemeMonochromeColor),screen.Brightness); // tint the frame with this color (the frame itself is just white).
+                GUI.Label(new Rect(15, 20, WindowRect.width - 30, WindowRect.height - 55), "", terminalFrameActiveStyle);
+                GUI.color = remember;
+            }
             else
                 GUI.Label(new Rect(15, 20, WindowRect.width-30, WindowRect.height-55), "", terminalFrameStyle);
 
@@ -969,10 +1069,10 @@ namespace kOS.Screen
                 shared.Screen.CharacterPixelHeight = postponedCharPixelHeight; // next OnGUI will repaint in the new size.
         }
         
-        protected Color AdjustColor(Color baseColor, double brightness)
+        protected Color AdjustBrightness(Color baseColor, double brightness)
         {
-            Color newColor = baseColor;
-            newColor.a = Convert.ToSingle(brightness); // represent dimness by making it fade into the backround.
+            Color newColor = new Color(
+                baseColor.r, baseColor.g, baseColor.b, Convert.ToSingle(brightness)); // represent dimness by making it fade into the backround.
             return newColor;
         }
 
@@ -1022,14 +1122,14 @@ namespace kOS.Screen
             // To emulate inverting the screen character, draw a solid block, then the reversed character atop it:
             // Solid Block:
             GUI.BeginGroup(new Rect((x * charWidth), (y * charHeight), charWidth, charHeight));
-            GUI.color = AdjustColor(reversingScreen ? bgColor : currentTextColor, brightness);
+            GUI.color = AdjustBrightness(BleedBGThrough(MaybeReverseColor(textColor,reversingScreen)), brightness);
             GUI.DrawTexture(new Rect(0, 0, charWidth, charHeight), Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
             GUI.EndGroup();
             // Inverted Character atop it in the same position:
             GUI.BeginGroup(new Rect((x * charWidth), (y * charHeight), charWidth, charHeight));
-            GUI.color = AdjustColor(reversingScreen ? currentTextColor : bgColor,
+            GUI.color = AdjustBrightness(BleedBGThrough(MaybeReverseColor(textColor,!reversingScreen)),
                 2*brightness /*it seems to need slightly higher alpha values to show up atop the solid block*/ );
-            terminalLetterSkin.label.normal.textColor = GUI.color;
+            terminalLetterSkin.label.normal.textColor = new Color( GUI.color.r, GUI.color.g, GUI.color.b, GUI.color.a); // Unity, why does Color lack a copy constructor?
             GUI.Label(new Rect(0, 0, charWidth, charHeight), ch.ToString(), terminalLetterSkin.label);
             GUI.EndGroup();
         }
@@ -1057,12 +1157,12 @@ namespace kOS.Screen
 
             NotifyOfScreenResize(shared.Screen);
             shared.Screen.AddResizeNotifier(NotifyOfScreenResize);
-            ChangeTitle(CalcualteTitle());
+            ChangeTitle(CalculateTitle());
 
             soundMaker.AttachTo(shared); // Attach the soundMaker also
         }
         
-        internal string CalcualteTitle()
+        internal string CalculateTitle()
         {
            KOSNameTag partTag = shared.KSPPart.Modules.OfType<KOSNameTag>().FirstOrDefault();
            return String.Format("{0} CPU: {1} ({2})",

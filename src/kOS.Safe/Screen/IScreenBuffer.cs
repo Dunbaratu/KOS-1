@@ -1,3 +1,5 @@
+using kOS.Safe.Utilities;
+using kOS.Safe.Encapsulation;
 using System.Collections.Generic;
 
 namespace kOS.Safe.Screen
@@ -13,6 +15,8 @@ namespace kOS.Safe.Screen
         int ColumnCount { get; }
         int AbsoluteCursorRow { get; set; }
         int BeepsPending {get; set;}
+        IRgbaColor BackgroundColor {get; set;}
+        IRgbaColor ErasemeMonochromeColor {get; set;} // for testing - this doesn't really belong in IScreenBuffer.
         bool ReverseScreen {get; set;}
         bool VisualBeep {get; set;}
         Queue<char> CharInputQueue { get; }

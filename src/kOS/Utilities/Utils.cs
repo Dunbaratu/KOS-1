@@ -115,9 +115,10 @@ namespace kOS.Utilities
         /// </summary>
         /// <returns>The Unity color object.</returns>
         /// <param name="inColor">In color.</param>
-        public static Color FromKosColor(RgbaColor inColor)
+        /// <param name="alphaMultiplier">multiply the alpha by this to make a more or less opaque version of the color</param>"
+        public static Color FromKosColor(IRgbaColor inColor, float alphaMultiplier = 1f)
         {
-            return new Color(inColor.Red, inColor.Green, inColor.Blue, inColor.Alpha);
+            return new Color(inColor.Red, inColor.Green, inColor.Blue, inColor.Alpha * alphaMultiplier);
         }
 
         /// <summary>

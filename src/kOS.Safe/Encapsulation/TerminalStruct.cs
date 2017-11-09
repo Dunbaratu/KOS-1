@@ -135,6 +135,12 @@ namespace kOS.Safe.Encapsulation
                                                                MINCOLUMNS,
                                                                MAXCOLUMNS,
                                                                "Get or Set the number of columns on the screen.  Value is limited to the range [" + MINCOLUMNS + "," + MAXCOLUMNS + "]"));
+            AddSuffix(new [] {"BGCOLOR", "BGCOLOUR"}, new SetSuffix<RgbaColor>(() => (RgbaColor)Shared.Screen.BackgroundColor,
+                                                                                     value => Shared.Screen.BackgroundColor = value,
+                                                                                     "Get or Set the background of the terminal if it's color capable."));
+            AddSuffix("ERASEMEMONOCOLOR", new SetSuffix<RgbaColor>(() => (RgbaColor)Shared.Screen.ErasemeMonochromeColor,
+                value => Shared.Screen.ErasemeMonochromeColor = value,
+                "eraseme: For debugging only: toggle whether the terminal hardware is monochrome, and if so, in what color.  set to black to revert to color mode."));
             AddSuffix("REVERSE", new SetSuffix<BooleanValue>(() => Shared.Screen.ReverseScreen,
                                                              value => Shared.Screen.ReverseScreen = value,
                                                              "Get or set the value of whether or not the terminal is in reversed mode."));

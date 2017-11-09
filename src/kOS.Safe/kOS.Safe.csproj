@@ -280,6 +280,7 @@
     <Compile Include="Exceptions\KOSStackOverflowException.cs" />
     <Compile Include="Encapsulation\RgbaColor.cs" />
     <Compile Include="Encapsulation\HsvColor.cs" />
+    <Compile Include="Encapsulation\IRgbaColor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Compilation\CompiledObject-doc.md" />
