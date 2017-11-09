@@ -1,4 +1,5 @@
 ﻿using kOS.Safe.Utilities;
+using kOS.Safe.Encapsulation;
 using kOS.Suffixed;
 using System;
 using System.Collections.Generic;
@@ -107,6 +108,16 @@ namespace kOS.Utilities
             while (outAngle < rangeStart)
                 outAngle += 360.0;
             return outAngle;
+        }
+
+        /// <summary>
+        /// Constructs a Unity color object from a kOS color object.
+        /// </summary>
+        /// <returns>The Unity color object.</returns>
+        /// <param name="inColor">In color.</param>
+        public static Color FromKosColor(RgbaColor inColor)
+        {
+            return new Color(inColor.Red, inColor.Green, inColor.Blue, inColor.Alpha);
         }
 
         /// <summary>

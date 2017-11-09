@@ -38,7 +38,7 @@ namespace kOS.Suffixed.Widget
             }
             set
             {
-                Writable.normal.textColor = value.Color;
+                Writable.normal.textColor = Utilities.Utils.FromKosColor(value);
             }
         }
 

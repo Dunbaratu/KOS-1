@@ -69,7 +69,7 @@ namespace kOS.Suffixed.Widget
 
         void SetSelectionColor(RgbaColor value)
         {
-            Skin.settings.selectionColor = value.Color;
+            Skin.settings.selectionColor = Utilities.Utils.FromKosColor(value);
         }
 
         StringValue GetFont()

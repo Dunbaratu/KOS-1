@@ -6,6 +6,7 @@ using kOS.Safe.Encapsulation.Suffixes;
 using kOS.Safe.Utilities;
 using kOS.Suffixed;
 using kOS.Suffixed.Part;
+using kOS.Safe.Encapsulation;
 
 namespace kOS.Function
 {
@@ -108,7 +109,7 @@ namespace kOS.Function
         private void HighlightPart(PartValue partValue)
         {
             var part = partValue.Part;
-            part.highlightColor = color.Color;
+            part.highlightColor = Utilities.Utils.FromKosColor(color);
             part.highlightType = Part.HighlightType.AlwaysOn;
             part.SetHighlight(enabled, false);
         }

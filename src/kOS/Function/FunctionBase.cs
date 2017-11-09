@@ -1,4 +1,5 @@
 ﻿using kOS.Safe.Exceptions;
+using kOS.Safe.Encapsulation;
 using kOS.Safe.Function;
 using kOS.Suffixed;
 using System;

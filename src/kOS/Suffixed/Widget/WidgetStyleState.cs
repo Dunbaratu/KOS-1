@@ -23,7 +23,7 @@ namespace kOS.Suffixed.Widget
             }
             set
             {
-                state.textColor = value.Color;
+                state.textColor = Utilities.Utils.FromKosColor(value);
             }
         }
 
