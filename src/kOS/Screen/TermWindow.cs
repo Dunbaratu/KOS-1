@@ -86,15 +86,16 @@ namespace kOS.Screen
             "Arial"                 // very bad, proportional, but guaranteed to exist in Unity no matter what.
         };
         private GUISkin terminalLetterSkin;
-            
+
+        /// <summary>isLocked really means "has keyboard focus".  (Keyboard is locked to this window. Tries to suppress game hotkeys, etc).</summary>
         private bool isLocked;
-        /// <summary>How long blinks should last for, for various blinking needs</summary>
+        /// <summary>How long termial reversing blinks should last for?</summary>
         private readonly TimeSpan blinkDuration = TimeSpan.FromMilliseconds(150);
-        /// <summary>How long to pad between consecutive blinks to ensure they are visibly detectable as distinct blinks.</summary>
+        /// <summary>How long to pad between consecutive terminal reversing blinks to ensure they are visibly detectable as distinct.</summary>
         private readonly TimeSpan blinkCoolDownDuration = TimeSpan.FromMilliseconds(50);
-        /// <summary>At what milliseconds-from-epoch timestamp will the current blink be over.</summary>
+        /// <summary>At what timestamp (realworld time, not gameworld time) will the current terminal reversing blink be over?</summary>
         private DateTime blinkEndTime;
-        /// <summary>text color that changes depending on if the computer is on</summary>
+        /// <summary>What FG color the current character is going to get painted in. Dynamically changes during the IMGUI draw process.</summary>
         private Color currentTextColor;
 
         /// <summary>Telnet repaints happen less often than Update()s.  Not every Update() has a telnet repaint happening.
@@ -203,13 +204,13 @@ namespace kOS.Screen
         /// But GUI.Labels that render a Texture2D instead of text, won't stretch\
         /// larger than the size of the image file no matter what you do (only smaller).
         /// So to make it stretch the image in a label, the image has to be implemented
-        /// as part of the label's background defined in the GUIStyle insteade of as a
+        /// as part of the label's background defined in the GUIStyle instead of as a
         /// normal image element.  This sets up that style, which you can then render
         /// by making a GUILabel use this style and have dummy empty string content.
         /// </summary>
         /// <returns>The slice style.</returns>
         /// <param name="fromTexture">From texture.</param>
-        private GUIStyle Create9SliceStyle(Texture2D fromTexture)
+        private static GUIStyle Create9SliceStyle(Texture2D fromTexture)
         {
             GUIStyle style = new GUIStyle();
             style.normal.background = fromTexture;
@@ -223,7 +224,7 @@ namespace kOS.Screen
         /// Make a flat one-color, 1 pixel texture in the given color:
         /// </summary>
         /// <returns>The flat background style same size as.</returns>
-        private Texture2D CreateFlatTexture(Color bgColor)
+        private static Texture2D CreateFlatTexture(Color bgColor)
         {
             Texture2D onePixelBg = new Texture2D(1, 1);
             onePixelBg.SetPixel(0, 0, bgColor);
@@ -239,7 +240,7 @@ namespace kOS.Screen
         /// </summary>
         /// <returns>The background input color.</returns>
         /// <param name="inColor">the background color with alpha channel altered to bleed through more if darker.</param>
-        private Color BleedBGThrough(Color inColor)
+        private static Color BleedBGThrough(Color inColor)
         {
             return new Color(inColor.r, inColor.g, inColor.b, (inColor.grayscale * inColor.a));
         }
@@ -257,20 +258,28 @@ namespace kOS.Screen
 
             if (hasColor)
             {
-                // If color, we want to invert the color cube - reversing every component but alpha:
+                // invert the color cube - reversing every component but alpha.
+                // For example the inverse of green is magenta:
                 return new Color(1f - inColor.r, 1f - inColor.g, 1f - inColor.b, inColor.a);
             }
             else
             {
-                // If monochrome, then use intensity comparison to decide if this color
-                // is more like FG or more like BG, then use that to "round off" the inversion
-                // to exactly FG or BG:
+                // inColor should always be exactly one of these two when in a monocrhome
+                // terminal. Do this check first to short circuit in that case and return quickly:
+                if (inColor == textColor)
+                    return bgColor;
+                if (inColor == bgColor)
+                    return textColor;
+
+                // But if we ever do call this with something other than the exact FG or BG color,
+                // be tolerant of that and deal with it like this, rather than presuming everything that
+                // isn't exactly FG must be BG, or visa versa:
                 float distanceFromFG = Math.Abs(textColor.grayscale - inColor.grayscale);
                 float distanceFromBG = Math.Abs(bgColor.grayscale - inColor.grayscale);
-                if (distanceFromBG < distanceFromFG) // If currently closer to background
-                    return textColor; // emit foreground
-                else // if currently closer to foreground
-                    return bgColor; // emit background
+                if (distanceFromBG < distanceFromFG) // If more background-ish
+                    return textColor;
+                else // if more foreground-ish
+                    return bgColor;
             }
         }
 
