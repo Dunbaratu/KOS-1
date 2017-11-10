@@ -264,7 +264,11 @@ namespace kOS.Screen
             }
             else
             {
-                // inColor should always be exactly one of these two when in a monocrhome
+                // Monochrome reversing is different (i.e. the reverse of green, on
+                // a green-on-black monochrome monitor should be black, not the magenta
+                // you'd get from color inversion.)
+
+                // inColor should always be passed in as exactly one of these two when in a monocrhome
                 // terminal. Do this check first to short circuit in that case and return quickly:
                 if (inColor == textColor)
                     return bgColor;
