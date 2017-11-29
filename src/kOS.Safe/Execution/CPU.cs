@@ -433,7 +433,7 @@ namespace kOS.Safe.Execution
                     deletedPointers++;
                     // also remove the corresponding trigger if exists
                     if (item.Value.Value is int)
-                        RemoveTrigger((int)item.Value.Value);
+                        RemoveTriggerNoPreserve((int)item.Value.Value);
                 }
                 else
                 {
@@ -1092,6 +1092,17 @@ namespace kOS.Safe.Execution
         }
 
         /// <summary>
+        /// As per AddTrigger, but it will refuse to do so if the trigger is in the no-preserve list.
+        /// </summary>
+        /// <returns>The trigger.</returns>
+        public TriggerInfo AddTriggerViaPreserve(int triggerFunctionPointer, List<VariableScope> closure)
+        {
+            TriggerInfo triggerRef = new TriggerInfo(currentContext, triggerFunctionPointer, closure);
+            currentContext.AddPendingTriggerViaPreserve(triggerRef);
+            return triggerRef;
+        }
+
+        /// <summary>
         /// Schedules a trigger function call to occur near the start of the next CPU update tick.
         /// If multiple such function calls get inserted between ticks, they will behave like
         /// a nested stack of function calls.  Mainline code will not continue until all such
@@ -1180,14 +1191,24 @@ namespace kOS.Safe.Execution
             return trigger;
         }
 
-        public void RemoveTrigger(int triggerFunctionPointer)
+        public void RemoveTriggerAllowPreserve(int triggerFunctionPointer)
         {
             currentContext.RemoveTrigger(new TriggerInfo(currentContext, triggerFunctionPointer, null));
         }
 
-        public void RemoveTrigger(TriggerInfo trigger)
+        public void RemoveTriggerAllowPreserve(TriggerInfo trigger)
         {
             currentContext.RemoveTrigger(trigger);
+        }
+
+        public void RemoveTriggerNoPreserve(int triggerFunctionPointer)
+        {
+            currentContext.RemoveTriggerBanningPreserve(new TriggerInfo(currentContext, triggerFunctionPointer, null));
+        }
+
+        public void RemoveTriggerNoPreserve(TriggerInfo trigger)
+        {
+            currentContext.RemoveTriggerBanningPreserve(trigger);
         }
 
         public void KOSFixedUpdate(double deltaTime)
@@ -1364,12 +1385,18 @@ namespace kOS.Safe.Execution
                 }
             }
             
-            // Remove all triggers that will fire.  Any trigger that wants to
-            // re-enable itself will do so by returning a boolean true, which
-            // will tell OpcodeReturn that it needs to re-add the trigger.
+            // Remove all triggers that will fire.  This implements the default
+            // behaviour that triggers only fire once and then never again.
+            // Triggers that prefer to override this default will tell us so
+            // by returning true.  When they return true, OpcodeReturn will
+            // re-insert that trigger so it fires again next time.  This technique
+            // where they remove themselves until they fire once, then re-insert
+            // themselves will prevent triggers from queing up faster than they fire
+            // off (a precaution that's needed if there's so much trigger code that
+            // there's more of it than can fit in one physics tick):
             foreach (TriggerInfo trigger in triggersToBeExecuted)
             {
-                RemoveTrigger(trigger);
+                RemoveTriggerAllowPreserve(trigger);
             }
 
             currentContext.InstructionPointer = currentInstructionPointer;

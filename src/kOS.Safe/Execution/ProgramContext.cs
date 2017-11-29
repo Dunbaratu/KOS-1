@@ -37,6 +37,16 @@ namespace kOS.Safe.Execution
         /// </summary>
         private List<TriggerInfo> TriggersToInsert { get; set; }
         public bool Silent { get; set; }
+
+        /// <summary>
+        /// Triggers matching the conditions in this list are triggers that
+        /// must not be re-inserted merely because the trigger returned true.
+        /// They can only be inserted when explicitly inserted (at which point
+        /// they are removed from this list).
+        /// </summary>
+        /// <value>The triggers not preservable.</value>
+        private List<TriggerInfo> TriggersNotPreservable { get; set; }
+
   
         public ProgramContext(bool interpreterContext)
         {
@@ -44,6 +54,7 @@ namespace kOS.Safe.Execution
             InstructionPointer = 0;
             Triggers = new List<TriggerInfo>();
             TriggersToInsert = new List<TriggerInfo>();
+            TriggersNotPreservable = new List<TriggerInfo>();
             builder = interpreterContext ? new ProgramBuilderInterpreter() : new ProgramBuilder();
             flyByWire = new Dictionary<string, bool>();
             fileMap  = new Dictionary<string, int>();
@@ -168,6 +179,25 @@ namespace kOS.Safe.Execution
             Triggers.Clear();
             TriggersToInsert.Clear();
         }
+
+        private void erasemeTriggerDump()
+        {
+            Console.WriteLine("eraseme:    TriggersToInsert: ");
+            foreach (TriggerInfo trig in TriggersToInsert) // eraseme
+            { // eraseme
+                Console.WriteLine("             " + trig.EntryPoint); // eraseme
+            } // eraseme
+            Console.WriteLine("eraseme:    Triggers: "); // eraseme
+            foreach (TriggerInfo trig in Triggers) // eraseme
+            { // eraseme
+                Console.WriteLine("             " + trig.EntryPoint); // eraseme
+            } // eraseme
+            Console.WriteLine("eraseme:    TriggersNotPreservable: "); // eraseme
+            foreach (TriggerInfo trig in TriggersNotPreservable) // eraseme
+            { // eraseme
+                Console.WriteLine("             " + trig.EntryPoint); // eraseme
+            } // eraseme
+        }
         
         /// <summary>
         /// Add a trigger to the list of triggers pending insertion.
@@ -183,19 +213,64 @@ namespace kOS.Safe.Execution
             // because it should be unlikely that there's hundreds of
             // triggers.  There'll be at most tens of them, and even that's
             // unlikely.
-            if (! ContainsTrigger(trigger))
+            if (!ContainsTrigger(trigger))
+            {
                 TriggersToInsert.Add(trigger);
+                TriggersNotPreservable.RemoveAll(x => x == trigger);
+            }
+            Console.WriteLine("eraseme: after AddPendingTrigger(TriggerInfo, trigger Entry = " + trigger.EntryPoint +")");
+            erasemeTriggerDump();
         }
-        
+
         /// <summary>
-        /// Remove a trigger from current triggers or pending insertion
-        /// triggers or both if need be, so it's not there anymore at all.
+        /// As per AddPendingTrigger, except that it will refuse
+        /// to do anything if this trigger is in the list of triggers that
+        /// aren't allowed to be preserved.
+        /// </summary>
+        /// <param name="trigger">Trigger.</param>
+        public void AddPendingTriggerViaPreserve(TriggerInfo trigger)
+        {
+            if (TriggersNotPreservable.Contains(trigger))
+                return;
+            AddPendingTrigger(trigger);
+            Console.WriteLine("eraseme: after AddPendingTriggerViaPreserve(TriggerInfo, trigger Entry = " + trigger.EntryPoint +")");
+            erasemeTriggerDump();
+        }
+
+        /// <summary>
+        /// Call when automatically removing a trigger as part of the usual pattern
+        /// of a trigger removing itself every time its inserted into the call stack.
+        /// This can still be overridden by a pending trigger in the call stack
+        /// that has not yet executed choosing to return true when it does execute so
+        /// it preserves itself (it will re-insert itself when returning true).
         /// </summary>
         /// <param name="trigger"></param>
         public void RemoveTrigger(TriggerInfo trigger)
         {
             Triggers.Remove(trigger); // can ignore if it wasn't in the list.
             TriggersToInsert.Remove(trigger); // can ignore if it wasn't in the list.
+            Console.WriteLine("eraseme: after RemoveTrigger(TriggerInfo, trigger Entry = " + trigger.EntryPoint +")");
+            erasemeTriggerDump();
+        }
+
+        /// <summary>
+        /// Remove a trigger from current triggers or pending insertion
+        /// triggers or both if need be, so it's not there anymore at all.
+        /// Also flag this removal as being one the program explicitly called
+        /// for.  What this means is that its removal cannot be overridden by
+        /// the trigger returning true in an attempt to preserve itself.  This
+        /// is relevant in the case where the trigger might have one last 
+        /// invocation queued up that is still pending, and another trigger
+        /// tries to remove it.
+        /// </summary>
+        /// <param name="trigger"></param>
+        public void RemoveTriggerBanningPreserve(TriggerInfo trigger)
+        {
+            RemoveTrigger(trigger);
+            if (!TriggersNotPreservable.Contains(trigger))
+                TriggersNotPreservable.Add(trigger);
+            Console.WriteLine("eraseme: after RemoveTriggerNoPreserve(TriggerInfo), trigger Entry = " + trigger.EntryPoint +")");
+            erasemeTriggerDump();
         }
         
         /// <summary>

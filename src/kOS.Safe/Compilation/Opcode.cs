@@ -1710,7 +1710,7 @@ namespace kOS.Safe.Compilation
                 else
                     if (returnVal is bool || returnVal is BooleanValue )
                         if (Convert.ToBoolean(returnVal))
-                            cpu.AddTrigger(trigger.EntryPoint, trigger.Closure);
+                            cpu.AddTriggerViaPreserve(trigger.EntryPoint, trigger.Closure);
             }
             
             int destinationPointer = contextRecord.CameFromInstPtr;
@@ -2190,7 +2190,7 @@ namespace kOS.Safe.Compilation
         public override void Execute(ICpu cpu)
         {
             var functionPointer = Convert.ToInt32(cpu.PopValueArgument()); // in case it got wrapped in a ScalarIntValue
-            cpu.RemoveTrigger(functionPointer);
+            cpu.RemoveTriggerNoPreserve(functionPointer);
         }
     }
 

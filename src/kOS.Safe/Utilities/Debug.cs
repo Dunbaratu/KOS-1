@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Runtime.Serialization;
 using kOS.Safe.Compilation;
 using kOS.Safe.Persistence;
@@ -92,6 +94,28 @@ namespace kOS.Safe.Utilities
             }
 
             return codeFragment.Aggregate(string.Empty, (current, s) => current + (s + "\n"));
+        }
+
+        /// <summary>
+        /// If there's a useful need to log what part of our system called the current
+        /// location of code, but without pausing execution as an exception would do,
+        /// call this and print the resulting string to something like Console.WriteLine
+        /// or wherever you like.
+        /// </summary>
+        /// <returns>The stack trace dump in C# terms (not kerboscript terms).</returns>
+        public static string CSharpStackTrace()
+        {
+            StringBuilder sb = new StringBuilder();
+            StackTrace trace = new StackTrace(true);
+
+            // Deliberately counting off by one, starting at 1 instead of 0,
+            // so this call to CSharpStackTrace() itself isn't in the output.
+            for(int i = 1; i < trace.FrameCount; i++ )
+            {
+                StackFrame frame = trace.GetFrame(i);
+                sb.Append(string.Format("{0}.{1}, line {2}\n", frame.GetMethod().DeclaringType.FullName, frame.GetMethod().Name, frame.GetFileLineNumber()));
+            }
+            return sb.ToString();
         }
     }
 }

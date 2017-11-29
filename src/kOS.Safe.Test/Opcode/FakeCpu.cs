@@ -180,6 +180,11 @@ namespace kOS.Safe.Test.Opcode
             throw new NotImplementedException();
         }
 
+        public TriggerInfo AddTriggerViaPreserve(int triggerFunctionPointer, List<VariableScope> closure)
+        {
+            throw new NotImplementedException();
+        }
+
         public TriggerInfo AddTrigger(UserDelegate del, List<kOS.Safe.Encapsulation.Structure> args)
         {
             throw new NotImplementedException();
@@ -195,12 +200,22 @@ namespace kOS.Safe.Test.Opcode
             throw new NotImplementedException();
         }
 
-        public void RemoveTrigger(int triggerFunctionPointer)
+        public void RemoveTriggerAllowPreserve(int triggerFunctionPointer)
         {
             throw new NotImplementedException();
         }
 
-        public void RemoveTrigger(TriggerInfo trigger)
+        public void RemoveTriggerAllowPreserve(TriggerInfo trigger)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveTriggerNoPreserve(int triggerFunctionPointer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveTriggerNoPreserve(TriggerInfo trigger)
         {
             throw new NotImplementedException();
         }

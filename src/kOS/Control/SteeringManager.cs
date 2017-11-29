@@ -65,6 +65,7 @@ namespace kOS.Control
             get { return enabled; }
             set
             {
+                Console.WriteLine("-----eraseme: Just called Enabled's Setter from:-------\n" + kOS.Safe.Utilities.Debug.CSharpStackTrace());
                 enabled = value;
                 if (enabled)
                 {
