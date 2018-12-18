@@ -485,6 +485,7 @@ namespace kOS.Screen
             Event e = Event.current;
             if (e.type == EventType.KeyDown)
             {
+                Console.WriteLine(string.Format("eraseme: Key Event Fired: KeyCode=0x{0:X}, Unicode hex=0x{1:X}, Unicode char={2}", e.keyCode, (int)e.character, e.character));
                 // This ugly hack is here to solve a bug with Unity mapping
                 // Keycodes to Unicode chars incorrectly on its Linux version:
                 char c;
